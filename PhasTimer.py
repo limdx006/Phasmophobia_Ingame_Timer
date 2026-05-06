@@ -490,18 +490,24 @@ class PhasmoOverlay:
 
     def _bind_keys(self):
         if HAS_KEYBOARD:
-            # Global hotkeys — work even when game window is focused
-            for i, p in enumerate(self.panels):
-                n = str(i + 1)
-                keyboard.add_hotkey(n, lambda panel=p: self.root.after(0, panel.toggle))
-                keyboard.add_hotkey(f"num {n}", lambda panel=p: self.root.after(0, panel.toggle))
+            # Use on_press so keys fire even while W/A/S/D are held down.
+            # add_hotkey blocks combos; on_press does not.
+            key_map = {str(i + 1): p for i, p in enumerate(self.panels)}
+            # numpad names in the keyboard library
+            numpad_map = {f"num {i + 1}": p for i, p in enumerate(self.panels)}
+
+            def _on_press(event):
+                panel = key_map.get(event.name) or numpad_map.get(event.name)
+                if panel:
+                    self.root.after(0, panel.toggle)
+
+            keyboard.on_press(_on_press, suppress=False)
         else:
             # Fallback: only works when overlay is focused
             for i, p in enumerate(self.panels):
                 n = str(i + 1)
                 self.root.bind_all(f"<Key-{n}>", lambda e, panel=p: panel.toggle())
                 self.root.bind_all(f"<KP_{n}>",  lambda e, panel=p: panel.toggle())
-            # Show warning in title
             self.root.after(500, lambda: print("Install 'keyboard' package for global hotkeys: pip install keyboard"))
 
     def _drag_start(self, e):
