@@ -1,44 +1,93 @@
-# Phasmophobia_Ingame_Timer
+# Phasmophobia In-Game Timer
 
-A floating overlay timer for Phasmophobia gameplay using Python.
+A floating always-on-top overlay timer for Phasmophobia gameplay, built with Python and tkinter.
 
-## 🖼 UI Overview
+## UI Overview
 
 <table>
   <tr>
     <td>
-      
+      <img width="434" height="652" alt="image" src="https://github.com/user-attachments/assets/aafb0a09-1da8-4f8b-afea-e5f2dff72980" />
     </td>
     <td>
-      
+      <img width="506" height="270" alt="image" src="https://github.com/user-attachments/assets/7e21d523-caa7-45c5-9452-be58ae3b9ddd" />
     </td>
   </tr>
 </table>
 
 ## Features
 
-- Floating overlay window with progress bars for different timers.
-- Keyboard shortcuts: 1/2/3/4 to start/reset timers.
-- Timers include Smudge, Hunt Cooldown, Hunt Duration, and Paranormal Sounds.
-- Each timer cycles through different ghost types/options when started.
+- Borderless floating overlay, always on top of other windows
+- Semi-transparent and draggable via the title bar
+- 4 independent timers each with a color-coded progress bar
+- Ghost-phase milestone labels update live as timers count down
+- 3-second flashing alert before each checkpoint
+- Global keyboard shortcuts (1/2/3/4) that work even while playing — no need to switch tabs
+- Hunt Duration panel includes a map picker dropdown to auto-select the correct timer length based on map size
+- Map data is stored separately in `phas_maps.py` for easy editing
 
 ## Installation
 
-1. Ensure Python 3.12 or later is installed.
-2. Install dependencies: `pip install pynput`
-3. Run the script: `python PhasTimer.py`
+1. Ensure Python 3.9 or later is installed
+2. Install the global hotkey dependency:
+   ```
+   pip install keyboard
+   ```
+3. Place `PhasTimer.py` and `phas_maps.py` in the same folder
+4. Run with administrator privileges (required for global hotkeys on Windows):
+   ```
+   python PhasTimer.py
+   ```
 
-## Usage
+## Timers
 
-- Press 1: Smudge Timer (3 minutes, shows when ghosts can hunt)
-- Press 2: Hunt Cooldown (cycles between Normal 30s and Demon 25s)
-- Press 3: Hunt Duration (cycles between Obambo Short 25s, Normal 30s, Obambo Long 45s, Cursed 50s)
-- Press 4: Paranormal Sounds (cycles between Normal 80s and Myling 80s)
+| Key | Timer | Duration | Notes |
+|-----|-------|----------|-------|
+| 1 | Smudge | 3:00 | Shows when Demon / Normal / Spirit can hunt again. Auto-starts a 5s stun countdown. Moroi 7s stun available manually. |
+| 2 | Hunt Duration | 50s / 70s / 80s | Duration depends on map size. Milestones identify Obambo Short, Normal, Obambo Long, and Cursed hunt endings. |
+| 3 | Hunt Cooldown | 0:30 | Shows when Demon (5s remaining) and Normal ghost cooldowns end. |
+| 4 | Paranormal Sound CD | 1:20 | Shows when Myling (15s remaining) and Normal ghost sound cooldowns end. |
 
-The overlay is semi-transparent, topmost, and movable by dragging.
+## Map Sizes
+
+Select the map before starting the Hunt Duration timer using the `▾ Map` dropdown or the Small / Medium / Large buttons.
+
+| Size | Max Duration | Milestones |
+|------|-------------|------------|
+| Small | 50s | Obambo Short 25s, Normal 20s, Obambo Long 7s, Cursed 0s |
+| Medium | 70s | Obambo Short 30s, Normal 20s, Obambo Long 10s, Cursed 0s |
+| Large | 80s | Obambo Short 30s, Normal 20s, Obambo Long 10s, Cursed 0s |
+
+Map names and their sizes are defined in `phas_maps.py`. Edit that file to add or rename maps without touching the timer code.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| 1 | Start / restart Smudge timer |
+| 2 | Start / restart Hunt Duration timer |
+| 3 | Start / restart Hunt Cooldown timer |
+| 4 | Start / restart Paranormal Sound CD timer |
+
+Pressing a key while the timer is already running restarts it from the beginning immediately.
 
 ## Requirements
 
-- Python 3.12+
-- pynput
-- tkinter (built-in)
+- Python 3.9+
+- `keyboard` library (`pip install keyboard`)
+- `tkinter` (built-in with Python)
+- Administrator privileges on Windows (for global hotkeys)
+
+## Libraries
+
+| Library | Version | Purpose | Built-in |
+|---------|---------|---------|----------|
+| `tkinter` | bundled with Python | GUI window, widgets, canvas | ✅ Yes |
+| `time` | bundled with Python | Monotonic clock for accurate tick timing | ✅ Yes |
+| `keyboard` | 0.13.5+ | Global hotkeys that work while the game is focused | ❌ `pip install keyboard` |
+
+## References
+
+Ghost behaviour timings and game mechanics referenced from:
+
+**Phasmo Cheat Sheet** by tybayn — https://tybayn.github.io/phasmo-cheat-sheet/
