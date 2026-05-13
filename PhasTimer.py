@@ -10,6 +10,7 @@ Requires: Python 3.x (tkinter built-in)
 
 import tkinter as tk
 import time as _time
+from phas_maps import MAPS_BY_SIZE
 
 try:
     import keyboard
@@ -32,6 +33,7 @@ WARN = "#ff6348"
 MUTED = "#3d4a60"
 DIM = "#5a6a85"
 WHITE = "#e8eef8"
+TEXT    = "#cdd6e8"
 FLASH1 = "#ffffff"
 FLASH2 = "#ff4757"
 
@@ -349,31 +351,35 @@ class TimerPanel:
         if "map_sizes" in self.cfg:
             map_row = tk.Frame(self.frame, bg=BG2)
             map_row.pack(fill="x", padx=8, pady=(2, 4))
-            tk.Label(
-                map_row, text="MAP:", bg=BG2, fg=DIM, font=("Courier", 6, "bold")
-            ).pack(side="left", padx=(0, 4))
+
+            # Dropdown button — opens a floating map picker
+            self._dropdown_btn = tk.Button(
+                map_row, text="▾ Map",
+                bg=BG3, fg=DIM, relief="flat", bd=0,
+                font=("Courier", 7, "bold"), padx=5, pady=1,
+                cursor="hand2",
+                activebackground=self.color, activeforeground=BG,
+                command=self._open_map_picker,
+            )
+            self._dropdown_btn.pack(side="left", padx=(0, 6))
+
+            # Size buttons
             self._map_btns = {}
             for size in self.cfg["map_sizes"]:
                 col = self.color if size == "Small" else MUTED
                 btn = tk.Button(
-                    map_row,
-                    text=size,
-                    bg=BG3,
-                    fg=col,
-                    relief="flat",
-                    bd=0,
-                    font=("Courier", 7, "bold"),
-                    padx=6,
-                    pady=1,
+                    map_row, text=size,
+                    bg=BG3, fg=col, relief="flat", bd=0,
+                    font=("Courier", 7, "bold"), padx=6, pady=1,
                     cursor="hand2",
-                    highlightbackground=col,
-                    highlightthickness=1,
-                    activebackground=self.color,
-                    activeforeground=BG,
+                    highlightbackground=col, highlightthickness=1,
+                    activebackground=self.color, activeforeground=BG,
                     command=lambda s=size: self._set_map_size(s),
                 )
                 btn.pack(side="left", padx=2)
                 self._map_btns[size] = btn
+
+            self._picker_win = None
 
     # Formatting
     def _fmt(self, secs):
@@ -381,6 +387,70 @@ class TimerPanel:
         m = int(secs) // 60
         s = int(secs) % 60
         return f"{m}:{s:02d}"
+
+    def _open_map_picker(self):
+        """Open a floating 3-column window listing all maps grouped by size."""
+        # Toggle: close if already open
+        if self._picker_win and self._picker_win.winfo_exists():
+            self._picker_win.destroy()
+            self._picker_win = None
+            return
+
+        win = tk.Toplevel()
+        win.overrideredirect(True)
+        win.wm_attributes("-topmost", True)
+        win.configure(bg=BG3)
+        win.wm_attributes("-alpha", 0.97)
+        self._picker_win = win
+
+        # Position below the dropdown button
+        win.update_idletasks()
+        self._dropdown_btn.update_idletasks()
+        bx = self._dropdown_btn.winfo_rootx()
+        by = self._dropdown_btn.winfo_rooty() + self._dropdown_btn.winfo_height() + 4
+        win.geometry(f"+{bx}+{by}")
+
+        size_colors = {"Small": ACCENT, "Medium": COOL_C, "Large": HUNT_C}
+
+        # Build one column per size — all rendered up front so geometry is correct
+        for size in self.cfg["map_sizes"]:
+            col = tk.Frame(win, bg=BG3, padx=8, pady=6)
+            col.pack(side="left", fill="y", padx=1)
+
+            # Column header
+            tk.Label(
+                col, text=size.upper(),
+                bg=BG3, fg=size_colors.get(size, DIM),
+                font=("Courier", 8, "bold"), anchor="w",
+            ).pack(fill="x", pady=(0, 3))
+
+            tk.Frame(col, bg=BORDER, height=1).pack(fill="x", pady=(0, 4))
+
+            for map_name in MAPS_BY_SIZE.get(size, []):
+                # Highlight currently selected map
+                fg = WHITE if (size == self._map_size) else DIM
+
+                def _pick(s=size, m=map_name):
+                    self._set_map_size(s)
+                    label = f"▾ {m[:16]}" if len(m) > 16 else f"▾ {m}"
+                    self._dropdown_btn.config(text=label, fg=self.color)
+                    if win.winfo_exists():
+                        win.destroy()
+                    self._picker_win = None
+
+                tk.Button(
+                    col, text=map_name,
+                    bg=BG3, fg=fg,
+                    relief="flat", bd=0,
+                    font=("Courier", 7), padx=4, pady=2,
+                    anchor="w", cursor="hand2",
+                    activebackground=self.color, activeforeground=BG,
+                    command=_pick,
+                ).pack(fill="x")
+
+        # Close when focus leaves the picker window
+        win.bind("<FocusOut>", lambda e: win.destroy() if win.winfo_exists() else None)
+        win.focus_force()
 
     def _set_map_size(self, size):
         self._map_size = size
