@@ -2,6 +2,19 @@
 
 A floating overlay timer for Phasmophobia gameplay using Python.
 
+## 🖼 UI Overview
+
+<table>
+  <tr>
+    <td>
+      
+    </td>
+    <td>
+      
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 - Floating overlay window with progress bars for different timers.
